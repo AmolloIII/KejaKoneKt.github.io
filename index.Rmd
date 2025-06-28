@@ -109,7 +109,7 @@ Row {.row data-height=150}
 ```{r}
 articles <- nrow(kejaz)
 valueBox(articles, 
-         icon = "fa-pencil",
+         icon = "fa-home",
          color = "success")
 ```
 
@@ -118,7 +118,7 @@ valueBox(articles,
 ```{r}
 spam <- comma(round(mean(kejaz$Prc.Rnt/1000), -3))
 valueBox(paste0("Kshs ", spam, " /-"), 
-         icon = "fa-trash",
+         icon = "fa-money-bill-wave",
          color = ifelse(spam > 10, "warning", "primary"))
 ```
 
@@ -127,8 +127,8 @@ valueBox(paste0("Kshs ", spam, " /-"),
 ```{r}
 comments <- nrow(parcelz)
 valueBox(comments, 
-         icon = "fa-comments",
-         color = "danger")
+         icon = "fa-map",
+         color = "primary")
 ```
 
 
@@ -140,7 +140,7 @@ parcelz$Areaste <- as.numeric(st_area(parcelz)/ 4046.8564224)
 
 comments <- round(mean(parcelz$Areaste), 3)
 valueBox(paste0(comments, " Acres"), 
-         icon = "fa-comments",
+         icon = "fa-ruler-combined",
          color = "danger")
 ```
 
