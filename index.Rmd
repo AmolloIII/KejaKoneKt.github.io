@@ -30,9 +30,29 @@ library(tidyverse)
 library(shiny)
 library(scales)
 
-kejaz <- st_read("kejaz.shp")
+kejaz <- st_read("kejaz.shp") %>% 
+  st_make_valid() %>% 
+  st_transform(crs = 4326)
 
-parcelz <- st_read("parcels.shp")
+parcelz <- st_read("parcels.shp") %>% 
+  st_make_valid() %>% 
+  st_transform(crs = 4326)
+
+fundiz <-st_read("service_providers.shp") %>% 
+  st_make_valid() %>% 
+  st_transform(crs = 4326)
+
+set.seed(123)  # For reproducibility
+
+# Define the real typologies to sample from
+real_typologies <- c("Bungalow", "Studio", "Flat", "Duplex", "Townhouse", "Cottage", "Penthouse", "Villa")
+
+# Identify rows with bedroom-based labels
+bedroom_rows <- kejaz$HsTyplg %in% c("1 Bedroom", "2 Bedroom", "3 Bedroom")
+
+# Randomly assign new typologies to those rows
+kejaz$HsTyplg[bedroom_rows] <- sample(real_typologies, sum(bedroom_rows), replace = TRUE)
+
 
 ```
 
@@ -129,12 +149,21 @@ valueBox(paste0(comments, " Acres"),
 Column {data-height=650}
 -----------------------------------------------------------------------
 
-### Chart A
+### Web Map
 
 ```{r}
 leaflet() %>% 
   addTiles() %>% 
-  addMarkers(data = kejaz)
+  addMarkers(data = kejaz,
+             label = ~paste0(HsTyplg, " in ", Nghbrhd),
+             group = "Houses",
+             clusterOptions = markerClusterOptions()) %>% 
+  addPolygons(data = parcelz,
+             group = "Parcels") %>%
+  addLayersControl(
+    overlayGroups = c("Houses", "Parcels"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
 ```
 
 
@@ -142,21 +171,31 @@ leaflet() %>%
 Column {data-height=350 .tabset}
 -----------------------------------------------------------------------
 
-### Chart B
+### Houses
 
 ```{r}
-
+leaflet() %>% 
+  addTiles() %>% 
+  addMarkers(data = kejaz,
+             label = ~paste0(HsTyplg, " in ", Nghbrhd),
+             clusterOptions = markerClusterOptions()
+  )
 ```
 
-### Chart C
+### Parcels
 
 ```{r}
-
+leaflet() %>% 
+  addTiles() %>% 
+  addPolygons(data = parcelz)
 ```
 
-### Chart D
+### Fundi
 
 ```{r}
-
+leaflet() %>% 
+  addTiles() %>% 
+  addMarkers(data = fundiz,
+             clusterOptions = markerClusterOptions())
 ```
 
