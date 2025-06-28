@@ -185,9 +185,45 @@ leaflet() %>%
 ### Parcels
 
 ```{r}
+parcelz$Areaste <- as.numeric(st_area(parcelz)) / 4046.8564224
+
+classify_size <- function(acres) {
+  if (acres <= 0.15) {
+    return("1/8 an Acre")
+  } else if (acres <= 0.3) {
+    return("1/4 an Acre")
+  } else if (acres <= 0.6) {
+    return("1/2 an Acre")
+  } else if (acres <= 1.5) {
+    return("1 Acre")
+  } else if (acres <= 2.5) {
+    return("2 Acres")
+  } else if (acres <= 3.5) {
+    return("3 Acres")
+  } else if (acres <= 5.5) {
+    return("5 Acres")
+  } else {
+    return("Over 5 Acres")
+  }
+}
+
+parcelz$SizeCategory <- sapply(parcelz$Areaste, classify_size)
+
+
 leaflet() %>% 
   addTiles() %>% 
-  addPolygons(data = parcelz)
+  addPolygons(data = parcelz,
+              label = ~PARCEL_NO,
+             popup = ~paste0(PARCEL_NO, 
+                             " measuring Approx. ", 
+                             round(Areaste, digits = 2), 
+                             " Acres"),
+    color = "red",         # Border color
+    weight = 5,            # Border thickness
+    fillColor = "red",     # Fill color
+    fillOpacity = 0.3,     # Fill transparency
+    opacity = 1            # Border opacity
+    )
 ```
 
 ### Fundi
@@ -196,6 +232,10 @@ leaflet() %>%
 leaflet() %>% 
   addTiles() %>% 
   addMarkers(data = fundiz,
+             label = ~Srvcs_O,
+             popup = ~paste0(Name, " with ", Yrs_f_E, " experience in ", Srvcs_O, 
+                            " services.",
+                            " Contact us for ", Addtn_A, " services"),
              clusterOptions = markerClusterOptions())
 ```
 
