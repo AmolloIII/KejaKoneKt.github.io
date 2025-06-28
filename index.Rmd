@@ -215,6 +215,7 @@ leaflet() %>%
   addPolygons(data = parcelz,
               label = ~PARCEL_NO,
              popup = ~paste0(PARCEL_NO, 
+                             " of ", SizeCategory, " category, and ",
                              " measuring Approx. ", 
                              round(Areaste, digits = 2), 
                              " Acres"),
