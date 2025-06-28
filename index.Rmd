@@ -1,0 +1,162 @@
+---
+title: "KejaKonneKt"
+output: 
+  flexdashboard::flex_dashboard:
+    theme:
+      version: 4
+      bg: "#101010"
+      fg: "#9DD5FA" 
+      primary: "#ED79F9"
+      navbar-bg: "#3ADAC6"
+      base_font: 
+        google: Prompt
+      heading_font:
+        google: Sen
+      code_font:
+        google: 
+          # arguments to sass::font_google() 
+          family: JetBrains Mono
+          local: false
+    orientation: rows
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(sf)
+library(leaflet)
+library(leaflet.extras)
+library(tidyverse)
+library(shiny)
+library(scales)
+
+kejaz <- st_read("kejaz.shp")
+
+parcelz <- st_read("parcels.shp")
+
+```
+
+
+
+Filters {.sidebar}
+-------------------------------------
+Filter property to display 
+
+```{r}
+# Property type selector
+radioButtons("property_type", "Property Type:",
+             choices = c("Houses", "Land"),
+             selected = "Houses")
+
+# Dynamic filters based on property type
+conditionalPanel(
+  condition = "input.property_type == 'Houses'",
+  selectInput("house_type", "House Type:",
+              choices = c("All", unique(kejaz$HsTyplg))),
+  selectInput("purpose", "Purpose:",
+              choices = c("All", unique(kejaz$For))),
+  numericInput("bedrooms", "Bedrooms:",
+              min = min(kejaz$N_ofBdr), 
+              max = max(kejaz$N_ofBdr),
+              value = 1),
+  selectInput("neighborhood", "Neighborhood:",
+              choices = c("All", unique(kejaz$Nghbrhd))),
+  textInput("amenities", "Amenities (keywords):", "")
+)
+
+conditionalPanel(
+  condition = "input.property_type == 'Land'",
+  sliderInput("area", "Area (hectares):",
+              min = floor(min(parcelz$AREA_HA, na.rm = TRUE)),
+              max = ceiling(max(parcelz$AREA_HA, na.rm = TRUE)),
+              value = c(0.01, 1)),
+  textInput("parcel_id", "Parcel ID:", ""),
+  selectInput("sheet_no", "Sheet Number:",
+              choices = c("All", unique(parcelz$SHEET_NO))),
+  dateRangeInput("auth_date", "Authorization Date Range:")
+)
+
+actionButton("reset_filters", "Reset Filters", icon = icon("undo"))
+
+```
+
+
+Row {.row data-height=150}
+-----------------------------------------------------------------------
+
+### Total Number of Houses Available
+
+```{r}
+articles <- nrow(kejaz)
+valueBox(articles, 
+         icon = "fa-pencil",
+         color = "success")
+```
+
+### Average Rent Per Month 
+
+```{r}
+spam <- comma(round(mean(kejaz$Prc.Rnt/1000), -3))
+valueBox(paste0("Kshs ", spam, " /-"), 
+         icon = "fa-trash",
+         color = ifelse(spam > 10, "warning", "primary"))
+```
+
+### Number of Available Parcels
+
+```{r}
+comments <- nrow(parcelz)
+valueBox(comments, 
+         icon = "fa-comments",
+         color = "danger")
+```
+
+
+### Average parcel area available
+
+```{r}
+
+parcelz$Areaste <- as.numeric(st_area(parcelz)/ 4046.8564224)
+
+comments <- round(mean(parcelz$Areaste), 3)
+valueBox(paste0(comments, " Acres"), 
+         icon = "fa-comments",
+         color = "danger")
+```
+
+
+
+Column {data-height=650}
+-----------------------------------------------------------------------
+
+### Chart A
+
+```{r}
+leaflet() %>% 
+  addTiles() %>% 
+  addMarkers(data = kejaz)
+```
+
+
+
+Column {data-height=350 .tabset}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r}
+
+```
+
+### Chart C
+
+```{r}
+
+```
+
+### Chart D
+
+```{r}
+
+```
+
